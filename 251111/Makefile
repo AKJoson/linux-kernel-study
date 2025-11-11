@@ -1,4 +1,5 @@
 obj-m := first_module.o
+obj-m := scull_module.o
 
 KDIR := /linux
 PWD := $(shell pwd)
