@@ -42,10 +42,10 @@ static int cherry_open(struct inode *inode, struct file *fp){
 static ssize_t cherry_write(struct file *fp,const char __user *buf,size_t count,loff_t *offest){
     //从private_data获取结构体
     struct msg_driver *msg_driver = fp->private_data;
-    // msg_driver是某有数据？ 有就进行睡眠等待，没有就进行数据写入
+    // msg_driver是否有数据？ 有就进行睡眠等待，没有就进行数据写入
     if(msg_driver->size > 0){
         // 有数据
-        DEFINE_WAIT(write_wait);
+        DEFINE_WAIT(write_wait); // 主要是获取current进程变量，准备将他加入等待队列
         add_wait_queue(&msg_driver->write_todo,&write_wait);
         while(msg_driver->size > 0){
             // 准备进入睡眠状态，等条件成立再结束睡眠
@@ -92,12 +92,15 @@ static ssize_t cherry_read(struct file *fp,char __user *buf,size_t count,loff_t 
     if(msg_driver->size == 0){
         //没有数据
         DEFINE_WAIT(read_wait);
+        // 加入队列
         add_wait_queue(&msg_driver->read_todo,&read_wait);
         while(msg_driver->size == 0){
+            // 状态改变TASK_INTERRUPTIBLE
             prepare_to_wait(&msg_driver->read_todo,&read_wait,TASK_INTERRUPTIBLE);
             pr_info("read prepare to sleeping...");
             schedule();
         }
+        //设置进程状态TASK_RUNNING状态，并且移除队列
         finish_wait(&msg_driver->read_todo,&read_wait);
     }
     mutex_lock(&msg_driver->driver_mutex);
