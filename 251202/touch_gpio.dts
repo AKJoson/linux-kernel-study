@@ -1,0 +1,18 @@
+/dts-v1/;
+/plugin/;
+/{
+    compatible = "brcm,bcm2712";
+
+    fragment@0{
+        target-path = "/";
+        __overlay__{
+            yp-touch-gpio{
+                compatible = "yp,touch_button_ctrl";
+                touch-gpios = <&gpio 21 0>;
+                led-gpios = <&gpio 26 0>;
+                label = "touch button info";
+                status = "okay";
+            };
+        };
+    };
+};
